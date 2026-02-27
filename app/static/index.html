@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSV to SQL Server Uploader</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">CSV to SQL Server</p>
+          <h1>Upload, map, and insert without the ceremony.</h1>
+          <p class="subhead">Load a CSV, preview rows, map columns, then push into SQL Server in chunks.</p>
+        </div>
+        <div class="status-card" id="status-card">
+          <div class="status-title">Status</div>
+          <div class="status-body" id="status-body">Idle</div>
+        </div>
+      </header>
+
+      <section class="panel">
+        <h2>1) Upload CSV</h2>
+        <div class="row">
+          <input type="file" id="csv-file" accept=".csv" />
+          <button id="upload-btn">Load CSV</button>
+        </div>
+        <div class="meta" id="csv-meta"></div>
+        <div class="preview" id="preview"></div>
+      </section>
+
+      <section class="panel">
+        <h2>2) Load Schema</h2>
+        <div class="row">
+          <select id="schema-select"></select>
+          <button id="refresh-schemas">Refresh</button>
+        </div>
+        <div class="meta" id="schema-meta"></div>
+      </section>
+
+      <section class="panel">
+        <h2>3) Map Columns</h2>
+        <div id="mapping-grid" class="mapping-grid"></div>
+      </section>
+
+      <section class="panel">
+        <h2>4) Upload to SQL Server</h2>
+        <button id="run-upload">Upload</button>
+        <div class="meta" id="upload-result"></div>
+      </section>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

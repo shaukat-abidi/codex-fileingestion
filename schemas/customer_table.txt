@@ -1,0 +1,10 @@
+{
+  "table": "dbo.Customer",
+  "columns": [
+    {"name": "CustomerId", "type": "INT", "nullable": false},
+    {"name": "FirstName", "type": "NVARCHAR(100)", "nullable": true},
+    {"name": "LastName", "type": "NVARCHAR(100)", "nullable": true},
+    {"name": "DOB", "type": "DATE", "nullable": true},
+    {"name": "IsActive", "type": "BIT", "nullable": false}
+  ]
+}

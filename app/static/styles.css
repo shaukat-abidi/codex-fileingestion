@@ -1,0 +1,163 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap");
+
+:root {
+  --bg: #f7f1e5;
+  --bg-2: #f4d58d;
+  --ink: #1c1b1b;
+  --muted: #4b4b4b;
+  --accent: #2f5d62;
+  --card: #fffaf0;
+  --ok: #1c7c54;
+  --warn: #b35c00;
+  --err: #b3261e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 20%, var(--bg-2), var(--bg));
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+}
+
+.hero {
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: 36px;
+  margin: 0 0 8px;
+}
+
+.subhead {
+  margin: 0;
+  color: var(--muted);
+}
+
+.panel {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 16px 0;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  animation: fadeUp 0.5s ease both;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+select,
+input[type="file"] {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #c5bfb1;
+  background: white;
+}
+
+.meta {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.preview-table,
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.preview-table th,
+.preview-table td,
+.mapping-table th,
+.mapping-table td {
+  padding: 8px;
+  border-bottom: 1px solid #e5dcc9;
+  text-align: left;
+  font-size: 14px;
+}
+
+.status-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 220px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+}
+
+.status-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.status-body.ok {
+  color: var(--ok);
+}
+
+.status-body.warn {
+  color: var(--warn);
+}
+
+.status-body.err {
+  color: var(--err);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 720px) {
+  .hero {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,6 @@
+CustomerId,FirstName,LastName,DOB,IsActive
+1,Ada,Lovelace,1815-12-10,true
+2,Alan,Turing,1912-06-23,true
+3,Grace,Hopper,1906-12-09,1
+4,Linus,Torvalds,1969-12-28,yes
+5,Margaret,Hamilton,1936-08-17,false

@@ -18,3 +18,6 @@ build/
 
 # Logs
 *.log
+
+# Tmp Uploads
+tmp_uploads

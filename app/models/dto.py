@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CsvUploadResponse(BaseModel):
@@ -32,8 +32,11 @@ class MappingItem(BaseModel):
 
 
 class UploadRunRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     file_id: str
-    schema_name: str
+    schema_name: str | None = None
+    upload_schema: SchemaResponse | None = Field(default=None, alias="schema")
     mappings: list[MappingItem]
 
 

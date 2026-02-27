@@ -26,63 +26,13 @@ const csvMeta = document.getElementById("csv-meta");
 const schemaMeta = document.getElementById("schema-meta");
 const preview = document.getElementById("preview");
 const mappingGrid = document.getElementById("mapping-grid");
-const schemaSelect = document.getElementById("schema-select");
+const schemaBuilder = document.getElementById("schema-builder");
+const tableNameInput = document.getElementById("table-name");
 const uploadResult = document.getElementById("upload-result");
 
 function setStatus(text, tone = "neutral") {
   statusBody.textContent = text;
   statusBody.className = `status-body ${tone}`;
-}
-
-async function fetchSchemas() {
-  setStatus("Loading schemas...");
-  const res = await fetch("/api/schema/list");
-  const data = await res.json();
-  if (!res.ok) {
-    setStatus("Failed to load schemas", "err");
-    schemaMeta.textContent = data.detail || "Could not load schema list";
-    schemaSelect.innerHTML = "";
-    return;
-  }
-
-  schemaSelect.innerHTML = "";
-  data.schemas.forEach((name) => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    schemaSelect.appendChild(opt);
-  });
-
-  if (data.schemas.length === 0) {
-    state.schema = null;
-    schemaMeta.textContent = "No schema files found in schemas/ directory.";
-    renderMappingGrid();
-    setStatus("No schemas found", "warn");
-    return;
-  }
-
-  await loadSchema(schemaSelect.value);
-  setStatus("Schemas loaded", "ok");
-}
-
-async function loadSchema(name) {
-  if (!name) {
-    return;
-  }
-  setStatus("Loading schema...");
-  const res = await fetch(`/api/schema/${encodeURIComponent(name)}`);
-  const data = await res.json();
-  if (!res.ok) {
-    state.schema = null;
-    setStatus("Schema load failed", "err");
-    schemaMeta.textContent = data.detail || "Schema load failed";
-    renderMappingGrid();
-    return;
-  }
-  state.schema = data;
-  schemaMeta.textContent = `Table: ${data.table} | Columns: ${data.columns.length}`;
-  renderMappingGrid();
-  setStatus("Schema ready", "ok");
 }
 
 function renderPreview(columns, rows) {
@@ -120,10 +70,112 @@ function renderPreview(columns, rows) {
   preview.appendChild(table);
 }
 
+function renderSchemaBuilder() {
+  schemaBuilder.innerHTML = "";
+  if (state.csvColumns.length === 0) {
+    schemaBuilder.innerHTML = "<p class='meta'>Upload a CSV to configure schema columns.</p>";
+    schemaMeta.textContent = "Waiting for CSV upload.";
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.className = "mapping-table";
+
+  const head = document.createElement("thead");
+  head.innerHTML = `
+    <tr>
+      <th>Use</th>
+      <th>CSV Column</th>
+      <th>Target Column</th>
+      <th>Target Type</th>
+      <th>Nullable</th>
+    </tr>
+  `;
+  table.appendChild(head);
+
+  const body = document.createElement("tbody");
+  state.csvColumns.forEach((col) => {
+    const tr = document.createElement("tr");
+
+    const useCell = document.createElement("td");
+    useCell.innerHTML = `<input type="checkbox" class="schema-use" data-csv-col="${col}" checked />`;
+    tr.appendChild(useCell);
+
+    const csvCell = document.createElement("td");
+    csvCell.textContent = col;
+    tr.appendChild(csvCell);
+
+    const targetCell = document.createElement("td");
+    targetCell.innerHTML = `<input type="text" class="schema-target-col" data-csv-col="${col}" value="${col}" />`;
+    tr.appendChild(targetCell);
+
+    const typeCell = document.createElement("td");
+    const typeSelect = document.createElement("select");
+    typeSelect.className = "schema-target-type";
+    typeSelect.dataset.csvCol = col;
+    typeOptions.forEach((t) => {
+      const opt = document.createElement("option");
+      opt.value = t;
+      opt.textContent = t;
+      if (t === "NVARCHAR(100)") {
+        opt.selected = true;
+      }
+      typeSelect.appendChild(opt);
+    });
+    typeCell.appendChild(typeSelect);
+    tr.appendChild(typeCell);
+
+    const nullableCell = document.createElement("td");
+    nullableCell.innerHTML = `<input type="checkbox" class="schema-nullable" data-csv-col="${col}" checked />`;
+    tr.appendChild(nullableCell);
+
+    body.appendChild(tr);
+  });
+
+  table.appendChild(body);
+  schemaBuilder.appendChild(table);
+  schemaMeta.textContent = `Ready to configure ${state.csvColumns.length} columns. Set table name then click Refresh.`;
+}
+
+function buildSchemaFromUi() {
+  if (!tableNameInput) {
+    throw new Error("UI is out of date. Hard refresh the page (Ctrl+Shift+R).");
+  }
+  const tableName = tableNameInput.value.trim();
+  if (!tableName) {
+    throw new Error("Table name is required");
+  }
+
+  const columns = [];
+  schemaBuilder.querySelectorAll("tbody tr").forEach((row) => {
+    const use = row.querySelector(".schema-use").checked;
+    if (!use) {
+      return;
+    }
+
+    const sourceCsv = row.querySelector(".schema-use").dataset.csvCol;
+    const targetCol = row.querySelector(".schema-target-col").value.trim();
+    const targetType = row.querySelector(".schema-target-type").value;
+    const nullable = row.querySelector(".schema-nullable").checked;
+
+    if (!targetCol) {
+      return;
+    }
+
+    columns.push({ name: targetCol, type: targetType, nullable, source_csv: sourceCsv });
+  });
+
+  if (columns.length === 0) {
+    throw new Error("Select at least one schema column");
+  }
+
+  state.schema = { table: tableName, columns };
+}
+
 function renderMappingGrid() {
   mappingGrid.innerHTML = "";
   if (!state.schema) {
-    mappingGrid.innerHTML = "<p class='meta'>Load a schema to map columns.</p>";
+    mappingGrid.innerHTML = "<p class='meta'>Define schema and click Refresh to populate mappings.</p>";
     return;
   }
 
@@ -155,16 +207,17 @@ function renderMappingGrid() {
 
     const csvCell = document.createElement("td");
     const csvSelect = document.createElement("select");
-    csvSelect.dataset.targetCol = col.name;
+    csvSelect.className = "mapping-csv-col";
     const empty = document.createElement("option");
     empty.value = "";
     empty.textContent = "-- not mapped --";
     csvSelect.appendChild(empty);
-    state.csvColumns.forEach((c) => {
+
+    state.csvColumns.forEach((csvCol) => {
       const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      if (c.toLowerCase() === col.name.toLowerCase()) {
+      opt.value = csvCol;
+      opt.textContent = csvCol;
+      if (csvCol === col.source_csv || csvCol.toLowerCase() === col.name.toLowerCase()) {
         opt.selected = true;
       }
       csvSelect.appendChild(opt);
@@ -174,23 +227,16 @@ function renderMappingGrid() {
 
     const typeCell = document.createElement("td");
     const typeSelect = document.createElement("select");
-    typeSelect.dataset.targetCol = col.name;
-    const defaultOpt = document.createElement("option");
-    defaultOpt.value = col.type;
-    defaultOpt.textContent = `${col.type} (schema)`;
-    defaultOpt.selected = true;
-    typeSelect.appendChild(defaultOpt);
-
+    typeSelect.className = "mapping-target-type";
     typeOptions.forEach((t) => {
-      if (t.toUpperCase() === col.type.toUpperCase()) {
-        return;
-      }
       const opt = document.createElement("option");
       opt.value = t;
       opt.textContent = t;
+      if (t.toUpperCase() === col.type.toUpperCase()) {
+        opt.selected = true;
+      }
       typeSelect.appendChild(opt);
     });
-
     typeCell.appendChild(typeSelect);
     tr.appendChild(typeCell);
 
@@ -227,17 +273,25 @@ document.getElementById("upload-btn").addEventListener("click", async () => {
   state.fileId = data.file_id;
   state.csvColumns = data.columns;
   state.previewRows = data.preview_rows;
+  state.schema = null;
 
   csvMeta.textContent = `File ID: ${data.file_id} | Columns: ${data.columns.length} | Total rows: ${data.total_rows ?? "n/a"}`;
   renderPreview(data.columns, data.preview_rows);
+  renderSchemaBuilder();
   renderMappingGrid();
   setStatus("CSV ready", "ok");
 });
 
-document.getElementById("refresh-schemas").addEventListener("click", fetchSchemas);
-
-schemaSelect.addEventListener("change", async () => {
-  await loadSchema(schemaSelect.value);
+document.getElementById("refresh-schemas").addEventListener("click", () => {
+  try {
+    buildSchemaFromUi();
+    schemaMeta.textContent = `Table: ${state.schema.table} | Columns: ${state.schema.columns.length}`;
+    renderMappingGrid();
+    setStatus("Schema configured", "ok");
+  } catch (err) {
+    setStatus("Schema configuration failed", "err");
+    schemaMeta.textContent = err.message;
+  }
 });
 
 document.getElementById("run-upload").addEventListener("click", async () => {
@@ -246,15 +300,15 @@ document.getElementById("run-upload").addEventListener("click", async () => {
     return;
   }
   if (!state.schema) {
-    setStatus("Load a schema first.", "warn");
+    setStatus("Define schema and click Refresh first.", "warn");
     return;
   }
 
   const mappings = [];
   mappingGrid.querySelectorAll("tbody tr").forEach((row) => {
     const targetCol = row.children[0].textContent.trim();
-    const csvCol = row.querySelector("select[data-target-col]").value || null;
-    const targetType = row.querySelectorAll("select[data-target-col]")[1].value;
+    const csvCol = row.querySelector(".mapping-csv-col").value || null;
+    const targetType = row.querySelector(".mapping-target-type").value;
     mappings.push({ target_col: targetCol, csv_col: csvCol, target_type: targetType });
   });
 
@@ -264,7 +318,14 @@ document.getElementById("run-upload").addEventListener("click", async () => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       file_id: state.fileId,
-      schema_name: schemaSelect.value,
+      schema: {
+        table: state.schema.table,
+        columns: state.schema.columns.map((c) => ({
+          name: c.name,
+          type: c.type,
+          nullable: c.nullable,
+        })),
+      },
       mappings,
     }),
   });
@@ -284,4 +345,5 @@ document.getElementById("run-upload").addEventListener("click", async () => {
   setStatus("Upload complete", "ok");
 });
 
-fetchSchemas();
+renderSchemaBuilder();
+renderMappingGrid();

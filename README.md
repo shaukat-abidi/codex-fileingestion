@@ -1,6 +1,6 @@
 # CSV to SQL Server Uploader (v1)
 
-Simple FastAPI app to upload a CSV, preview top 10 rows, map to a schema file, and insert into SQL Server using chunked, transactional, parameterized queries.
+Simple FastAPI app to upload a CSV, preview top 5 rows, define table/mapping in UI, and insert into SQL Server using chunked, transactional, parameterized queries.
 
 ## Prereqs
 - Python 3.11+
@@ -17,8 +17,6 @@ pip install -r requirements.txt
 
 2) Create `.env` from `.env.example` and fill in SQL Server values.
 
-3) Put schema files in `schemas/` as `.txt` JSON files.
-
 ## Run
 ```bash
 uvicorn app.main:app --reload
@@ -30,3 +28,10 @@ Open http://127.0.0.1:8000
 - Upload size limit is controlled by `MAX_UPLOAD_MB`.
 - Chunk size is controlled by `CHUNK_SIZE`.
 - Uploaded CSVs are stored under `tmp_uploads/` and removed after successful insert.
+
+## Manual test flow
+1) Upload a CSV and confirm preview shows 5 rows.
+2) In Load Schema, enter `schema.table` and click `Generate Schema`; mapping grid should populate from CSV columns without DB calls.
+3) Upload to a table that does not exist; app should create table from mappings and insert rows.
+4) Upload the same CSV again to the same table; app should append rows.
+5) Enter an invalid table name (for example `dbo.Customer;DROP`) and confirm request is rejected.

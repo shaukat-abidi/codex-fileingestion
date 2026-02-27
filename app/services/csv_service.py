@@ -52,7 +52,7 @@ async def save_upload(upload_file: UploadFile) -> dict:
     finally:
         await upload_file.close()
 
-    df = pd.read_csv(file_path, nrows=10, dtype=str, keep_default_na=False, na_filter=False)
+    df = pd.read_csv(file_path, nrows=5, dtype=str, keep_default_na=False, na_filter=False)
     preview_rows = df.to_dict(orient="records")
     columns = list(df.columns)
 

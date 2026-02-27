@@ -33,11 +33,10 @@
       <section class="panel">
         <h2>2) Load Schema</h2>
         <div class="row">
-          <input id="table-name" type="text" placeholder="Target table (e.g. dbo.Customer)" />
-          <button id="refresh-schemas">Refresh</button>
+          <label for="table-name">Enter target table name</label>
+          <input id="table-name" type="text" placeholder="dbo.Customer" />
+          <button id="refresh-schemas">Generate Schema</button>
         </div>
-        <div class="meta">Upload a CSV first. Then define which columns to include, type, and nullable settings.</div>
-        <div id="schema-builder" class="mapping-grid"></div>
         <div class="meta" id="schema-meta"></div>
       </section>
 
